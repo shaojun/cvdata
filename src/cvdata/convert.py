@@ -20,7 +20,6 @@ from tqdm import tqdm
 from cvdata.common import FORMAT_CHOICES
 from cvdata.utils import darknet_indices_to_labels, image_dimensions, matching_ids
 
-
 # ------------------------------------------------------------------------------
 # set up a basic, global _logger which will write to the console
 logging.basicConfig(
@@ -122,10 +121,10 @@ def _dataset_bbox_examples(
         # get the file IDs for all matching image/Darknet pairs (i.e. the dataset)
         annotation_ext = ".txt"
         file_ids = matching_ids(
-                annotations_dir,
-                images_dir,
-                annotation_ext,
-                image_ext,
+            annotations_dir,
+            images_dir,
+            annotation_ext,
+            image_ext,
         )
 
         # get the bounding boxes from the annotation files
@@ -175,7 +174,6 @@ def _dataset_bbox_examples(
 def _int64_feature(
         value: int,
 ) -> tf.train.Feature:
-
     return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
 
@@ -183,7 +181,6 @@ def _int64_feature(
 def _int64_list_feature(
         value: List[int],
 ) -> tf.train.Feature:
-
     return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
 
 
@@ -191,7 +188,6 @@ def _int64_list_feature(
 def _bytes_feature(
         value: str,
 ) -> tf.train.Feature:
-
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
 
@@ -216,7 +212,6 @@ def _bytes_list_feature(
 def _string_bytes_list_feature(
         value: List[str],
 ) -> tf.train.Feature:
-
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=value))
 
 
@@ -224,7 +219,6 @@ def _string_bytes_list_feature(
 def _float_list_feature(
         value: List[float],
 ) -> tf.train.Feature:
-
     return tf.train.Feature(float_list=tf.train.FloatList(value=value))
 
 
@@ -346,8 +340,8 @@ def _open_sharded_output_tfrecords(
     ]
 
     tfrecords = [
-      exit_stack.enter_context(TFRecordWriter(file_name))
-      for file_name in tf_record_output_filenames
+        exit_stack.enter_context(TFRecordWriter(file_name))
+        for file_name in tf_record_output_filenames
     ]
 
     return tfrecords
@@ -602,7 +596,6 @@ def kitti_to_darknet(
 
 # ------------------------------------------------------------------------------
 def single_pascal_to_kitti(arguments: Dict):
-
     pascal_file_name = arguments["file_id"] + arguments["pascal_ext"]
     image_file_name = arguments["file_id"] + arguments["img_ext"]
     pascal_file_path = os.path.join(arguments["pascal_dir"], pascal_file_name)
@@ -701,7 +694,6 @@ def pascal_to_kitti(
     # move the image files into KITTI images directory
     conversion_arguments_list = []
     for file_id in file_ids:
-
         conversion_arguments = {
             "file_id": file_id,
             "pascal_ext": pascal_ext,
@@ -727,10 +719,22 @@ def pascal_to_kitti(
 
 
 # ------------------------------------------------------------------------------
+def images_jpeg_to_jpg(
+        images_dir: str,
+):
+    _logger.info(f"Convert(actual rename) all JPEG files in directory {images_dir} to JPG")
+
+    for file_name in tqdm(os.listdir(images_dir)):
+        file_name_prefix, ext = os.path.splitext(file_name)
+        if ext.lower() == ".jpeg":
+            # png_file_path = os.path.join(images_dir, file_name)
+            os.rename(file_name, file_name_prefix + ".jpg")
+
+
+# ------------------------------------------------------------------------------
 def images_png_to_jpg(
         images_dir: str,
 ):
-
     _logger.info(f"Converting all PNG files in directory {images_dir} to JPG")
 
     for file_name in tqdm(os.listdir(images_dir)):
@@ -795,7 +799,6 @@ def bounding_boxes_pascal(
 
         # make sure we don't have wonky values with mins > maxs
         if (bbox_min_x >= bbox_max_x) or (bbox_min_y >= bbox_max_y):
-
             # report the issue via log message
             _logger.warning("Bounding box minimum(s) greater than maximum(s)")
 
@@ -822,7 +825,6 @@ def pascal_to_openimages(
         openimages_dir: str,
         move_image_files: bool = False,
 ):
-
     def csv_from_pascal(
             file_path_csv: str,
             images_directory: str,
@@ -926,7 +928,6 @@ def openimages_to_pascal(
 
 # ------------------------------------------------------------------------------
 def main():
-
     # Usage: PASCAL to KITTI
     # $ python convert.py --annotations_dir ~/datasets/handgun/annotations/pascal \
     #     --images_dir ~/datasets/handgun/images \
@@ -1104,6 +1105,14 @@ def main():
                 "Unsupported format conversion: "
                 f"{args['in_format']} to {args['out_format']}",
             )
+    elif args["in_format"] == "jpeg":
+        if args["out_format"] == "jpg":
+            images_jpeg_to_jpg(args["images_dir"])
+        else:
+            raise ValueError(
+                "Unsupported format conversion(you may want convert from jpeg to jpg?): "
+                f"{args['in_format']} to {args['out_format']}",
+            )
     elif args["in_format"] == "darknet":
         if args["out_format"] == "tfrecord":
             darknet_to_tfrecord(
@@ -1128,5 +1137,4 @@ def main():
 
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
-
     main()

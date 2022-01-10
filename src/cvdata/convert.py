@@ -728,7 +728,7 @@ def images_jpeg_to_jpg(
         file_name_prefix, ext = os.path.splitext(file_name)
         if ext.lower() == ".jpeg":
             # png_file_path = os.path.join(images_dir, file_name)
-            os.rename(file_name, file_name_prefix + ".jpg")
+            os.rename(os.path.join(images_dir, file_name), os.path.join(images_dir, file_name_prefix + ".jpg"))
 
 
 # ------------------------------------------------------------------------------

@@ -282,7 +282,8 @@ def resize_image_label(
                 y_scale: float,
         ) -> str:
 
-            parts = kitti_line.rstrip("\r\n").split()
+            # parts = kitti_line.rstrip("\r\n").split()
+            parts = kitti_line.split()
             x_min, y_min, x_max, y_max = list(map(int, map(float, parts[4:8])))
 
             # clip to one less pixel than the dimension size in

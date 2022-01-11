@@ -723,12 +723,14 @@ def images_jpeg_to_jpg(
         images_dir: str,
 ):
     _logger.info(f"Convert(actual rename) all JPEG files in directory {images_dir} to JPG")
-
+    renamed_files_count = 0
     for file_name in tqdm(os.listdir(images_dir)):
         file_name_prefix, ext = os.path.splitext(file_name)
         if ext.lower() == ".jpeg":
             # png_file_path = os.path.join(images_dir, file_name)
+            renamed_files_count = renamed_files_count + 1
             os.rename(os.path.join(images_dir, file_name), os.path.join(images_dir, file_name_prefix + ".jpg"))
+    _logger.info(f"    Total: {renamed_files_count} files renamed.")
 
 
 # ------------------------------------------------------------------------------
@@ -736,13 +738,14 @@ def images_png_to_jpg(
         images_dir: str,
 ):
     _logger.info(f"Converting all PNG files in directory {images_dir} to JPG")
-
+    renamed_files_count = 0
     for file_name in tqdm(os.listdir(images_dir)):
         file_id, ext = os.path.splitext(file_name)
         if ext.lower() == ".png":
             png_file_path = os.path.join(images_dir, file_name)
             png_to_jpg(png_file_path, True)
-
+            renamed_files_count = renamed_files_count + 1
+    _logger.info(f"    Total: {renamed_files_count} files renamed.")
 
 # ------------------------------------------------------------------------------
 def png_to_jpg(

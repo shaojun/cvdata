@@ -282,8 +282,8 @@ def resize_image_label(
                 y_scale: float,
         ) -> str:
 
-            # parts = kitti_line.rstrip("\r\n").split()
-            parts = kitti_line.split()
+            parts = kitti_line.rstrip("\r\n").split()
+            # parts = kitti_line.split()
             x_min, y_min, x_max, y_max = list(map(int, map(float, parts[4:8])))
 
             # clip to one less pixel than the dimension size in
@@ -303,14 +303,14 @@ def resize_image_label(
             # replace the bounding boxes in-place
             with fileinput.FileInput(annotation_path, inplace=True) as file_input:
                 for line in file_input:
-                    print(scale_line(line, new_width, new_height, scale_x, scale_y))
+                    print(scale_line(line, new_width, new_height, scale_x, scale_y) + "\n")
 
         else:
             # read lines from the original, update the bounding box, and write to new file
             with open(annotation_path, "r") as original_kitti_file, \
                     open(output_annotation_path, "w") as new_kitti_file:
                 for line in original_kitti_file:
-                    new_kitti_file.write(scale_line(line, new_width, new_height, scale_x, scale_y))
+                    new_kitti_file.write(scale_line(line, new_width, new_height, scale_x, scale_y) + "\n")
 
     else:
         raise ValueError(f"Unsupported annotation format: \'{annotation_format}\'")
@@ -366,7 +366,6 @@ def resize_dataset(
 
         # loop over all image files and perform scaling/padding on each
         for file_id in file_ids:
-
             resize_arguments = {
                 "file_id": file_id,
                 "image_ext": image_ext,
@@ -436,7 +435,6 @@ def resize_images(
 
 # ------------------------------------------------------------------------------
 def main():
-
     # parse the command line arguments
     args_parser = argparse.ArgumentParser()
     args_parser.add_argument(
@@ -511,7 +509,6 @@ def main():
 
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
-
     # Example usages:
     #
     # Resize all images in a specified directory:

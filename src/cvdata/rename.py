@@ -7,6 +7,8 @@ from cvdata.common import FORMAT_CHOICES
 # ------------------------------------------------------------------------------
 def rename_image_files(
         images_dir: str,
+        kitti_labels_dir: str,
+        keep_old_name: bool,
         prefix: str,
         start: int,
         digits: int,
@@ -17,6 +19,8 @@ def rename_image_files(
     specified number of digits width.
 
     :param images_dir: all image files within this directory will be renamed
+    :param kitti_labels_dir: all label files within this directory will be renamed
+    :param keep_old_name: original file name will be kept as a part of new name
     :param prefix: the prefix used for the new file names
     :param start: the number at which the enumeration portion of the new file
         names should begin
@@ -26,24 +30,29 @@ def rename_image_files(
 
     supported_extensions = ("gif", "jpg", "jpeg", "png",)
     current = start
-    for file_name in os.listdir(images_dir):
-        _, ext = os.path.splitext(file_name)
+    for image_file_name in os.listdir(images_dir):
+        orignal_image_file_short_name, ext = os.path.splitext(image_file_name)
         if ext[1:].lower() in supported_extensions:
-            new_file_name = f"{prefix}_{str(current).zfill(digits)}{ext}"
-            new_file_path = os.path.join(images_dir, new_file_name)
-            original_file_path = os.path.join(images_dir, file_name)
-            os.rename(original_file_path, new_file_path)
+            if not keep_old_name:
+                new_image_file_name = f"{prefix}_{str(current).zfill(digits)}{ext}"
+            else:
+                new_image_file_name = f"{prefix}_{str(current).zfill(digits)}_{orignal_image_file_short_name}{ext}"
+            new_image_file_path = os.path.join(images_dir, new_image_file_name)
+            original_image_file_path = os.path.join(images_dir, image_file_name)
+            os.rename(original_image_file_path, new_image_file_path)
+            original_label_file_name = os.path.join(kitti_labels_dir, f"{orignal_image_file_short_name}.txt")
+            if os.path.exists(original_label_file_name):
+                os.rename(original_label_file_name, os.path.join(kitti_labels_dir, f"{new_image_file_name}.txt"))
             current += 1
 
 
 # ------------------------------------------------------------------------------
 def main():
-
     # parse the command line arguments
     args_parser = argparse.ArgumentParser()
     args_parser.add_argument(
         "--annotations_dir",
-        required=False,
+        required=True,
         type=str,
         help="path to directory containing input annotation files to be converted",
     )
@@ -52,6 +61,12 @@ def main():
         required=True,
         type=str,
         help="path to directory containing input image files",
+    )
+    args_parser.add_argument(
+        "--keep-old-name",
+        required=False,
+        type=bool,
+        help="original file name will be kept as a part of new name",
     )
     args_parser.add_argument(
         "--prefix",
@@ -76,10 +91,10 @@ def main():
     )
     args_parser.add_argument(
         "--format",
-        required=False,
+        required=True,
         type=str,
         choices=FORMAT_CHOICES,
-        help="format of the annotations",
+        help="format of the annotations, only support kitti",
     )
     args_parser.add_argument(
         "--start",
@@ -90,22 +105,22 @@ def main():
     )
     args = vars(args_parser.parse_args())
 
-    if args["annotations_dir"] is None:
-
+    if args["annotations_dir"] is not None:
         rename_image_files(
             args["images_dir"],
+            args["annotations_dir"],
+            args["keep-old-name"],
             args["prefix"],
             args["start"],
             args["digits"],
         )
     else:
-        raise ValueError("Renaming of annotated datasets is unsupported")
+        raise ValueError("annotations_dir must be provided, and now only support kitti format.")
 
 
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
-
-    # Usage: rename names of dataset files (images and annotations)
+    # Usage: ONLY FOR kitti, rename names of dataset files (images and annotations)
     # $ python rename.py --annotations_dir ~/datasets/handgun/kitti \
     #     --images_dir ~/datasets/handgun/images \
     #     --prefix handgun --start 100 --digits 6 \

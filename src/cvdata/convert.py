@@ -730,7 +730,7 @@ def images_jpeg_to_jpg(
             # png_file_path = os.path.join(images_dir, file_name)
             renamed_files_count = renamed_files_count + 1
             os.rename(os.path.join(images_dir, file_name), os.path.join(images_dir, file_name_prefix + ".jpg"))
-    _logger.info(f"    Total: {renamed_files_count} files renamed.")
+    _logger.info(f"    Total: {renamed_files_count} files were renamed.")
 
 
 # ------------------------------------------------------------------------------
@@ -745,7 +745,7 @@ def images_png_to_jpg(
             png_file_path = os.path.join(images_dir, file_name)
             png_to_jpg(png_file_path, True)
             renamed_files_count = renamed_files_count + 1
-    _logger.info(f"    Total: {renamed_files_count} files renamed.")
+    _logger.info(f"    Total: {renamed_files_count} files were converted.")
 
 # ------------------------------------------------------------------------------
 def png_to_jpg(

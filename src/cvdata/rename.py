@@ -1,8 +1,18 @@
 import argparse
 import os
-
+import logging
 from cvdata.common import FORMAT_CHOICES
+# ------------------------------------------------------------------------------
+# set up a basic, global _logger which will write to the console
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    datefmt="%Y-%m-%d  %H:%M:%S",
+)
+_logger = logging.getLogger(__name__)
 
+
+# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 def rename_image_files(
@@ -43,6 +53,8 @@ def rename_image_files(
             original_label_file_name = os.path.join(kitti_labels_dir, f"{orignal_image_file_short_name}.txt")
             if os.path.exists(original_label_file_name):
                 os.rename(original_label_file_name, os.path.join(kitti_labels_dir, f"{new_image_file_name}.txt"))
+            else:
+                _logger.info(f"Label file: {original_label_file_name} could not be found, skip it for renaming...")
             current += 1
 
 
@@ -127,7 +139,7 @@ if __name__ == "__main__":
     #     --prefix handgun --start 100 --digits 6 \
     #     --format kitti --kitti_ids_file file_ids.txt
     #
-    # Usage: rename names of image files (images only)
+    # Usage: ONLY FOR kitti, rename names of image files (images only)
     # $ python rename.py --images_dir ~/datasets/handgun/images \
     #     --prefix handgun --start 100 --digits 6
 

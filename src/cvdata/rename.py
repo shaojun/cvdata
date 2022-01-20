@@ -110,7 +110,7 @@ def main():
         rename_image_files(
             args["images_dir"],
             args["annotations_dir"],
-            args["keep-old-name"],
+            args["keep_old_name"],
             args["prefix"],
             args["start"],
             args["digits"],

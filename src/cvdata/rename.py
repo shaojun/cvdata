@@ -63,9 +63,10 @@ def main():
         help="path to directory containing input image files",
     )
     args_parser.add_argument(
-        "--keep-old-name",
+        "--keep_old_name",
         required=False,
         type=bool,
+        default=True,
         help="original file name will be kept as a part of new name",
     )
     args_parser.add_argument(

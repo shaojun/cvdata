@@ -748,6 +748,20 @@ def images_png_to_jpg(
     _logger.info(f"    Total: {renamed_files_count} files were converted.")
 
 # ------------------------------------------------------------------------------
+def images_jpg_to_png(
+        images_dir: str,
+):
+    _logger.info(f"Converting all JPG files in directory {images_dir} to PNG")
+    renamed_files_count = 0
+    for file_name in tqdm(os.listdir(images_dir)):
+        file_id, ext = os.path.splitext(file_name)
+        if ext.lower() == ".jpg":
+            jpg_file_path = os.path.join(images_dir, file_name)
+            jpg_to_png(jpg_file_path, True)
+            renamed_files_count = renamed_files_count + 1
+    _logger.info(f"    Total: {renamed_files_count} files were converted.")
+
+# ------------------------------------------------------------------------------
 def png_to_jpg(
         png_file_path: str,
         remove_png: bool = False,
@@ -772,6 +786,32 @@ def png_to_jpg(
         os.remove(png_file_path)
 
     return jpg_file_path
+
+# ------------------------------------------------------------------------------
+def jpg_to_png(
+        jpg_file_path: str,
+        remove_jpg: bool = False,
+) -> str:
+    """
+    Converts a JPG image to PNG and optionally removes the original JPG image file.
+
+    :param jpg_file_path: path to a JPG image file
+    :param remove_jpg: whether or not to remove the original JPG after the conversion
+    :return: path to the new PNG file
+    """
+
+    # argument validation
+    if not os.path.exists(jpg_file_path):
+        raise ValueError(f"File does not exist: {png_file_path}")
+
+    # read the JPG image data and rewrite as PNG
+    png_file_path = os.path.splitext(jpg_file_path)[0] + ".png"
+    img = cv2.imread(jpg_file_path)
+    cv2.imwrite(png_file_path, img)
+    if remove_jpg:
+        os.remove(jpg_file_path)
+
+    return png_file_path
 
 
 # ------------------------------------------------------------------------------
@@ -1103,6 +1143,14 @@ def main():
     elif args["in_format"] == "png":
         if args["out_format"] == "jpg":
             images_png_to_jpg(args["images_dir"])
+        else:
+            raise ValueError(
+                "Unsupported format conversion: "
+                f"{args['in_format']} to {args['out_format']}",
+            )
+    elif args["in_format"] == "jpg":
+        if args["out_format"] == "png":
+            images_jpg_to_png(args["images_dir"])
         else:
             raise ValueError(
                 "Unsupported format conversion: "

@@ -732,6 +732,19 @@ def images_jpeg_to_jpg(
             os.rename(os.path.join(images_dir, file_name), os.path.join(images_dir, file_name_prefix + ".jpg"))
     _logger.info(f"    Total: {renamed_files_count} files were renamed.")
 
+# ------------------------------------------------------------------------------
+def images_PNG_to_png(
+        images_dir: str,
+):
+    _logger.info(f"Convert(actual rename) all .PNG files' extension name to lower case in directory {images_dir}")
+    renamed_files_count = 0
+    for file_name in tqdm(os.listdir(images_dir)):
+        file_name_prefix, ext = os.path.splitext(file_name)
+        if ext == ".PNG":
+            # png_file_path = os.path.join(images_dir, file_name)
+            renamed_files_count = renamed_files_count + 1
+            os.rename(os.path.join(images_dir, file_name), os.path.join(images_dir, file_name_prefix + ".png"))
+    _logger.info(f"    Total: {renamed_files_count} files were renamed.")
 
 # ------------------------------------------------------------------------------
 def images_png_to_jpg(
@@ -1143,6 +1156,14 @@ def main():
     elif args["in_format"] == "png":
         if args["out_format"] == "jpg":
             images_png_to_jpg(args["images_dir"])
+        else:
+            raise ValueError(
+                "Unsupported format conversion: "
+                f"{args['in_format']} to {args['out_format']}",
+            )
+    elif args["in_format"] == "PNG":
+        if args["out_format"] == "png":
+            images_PNG_to_png(args["images_dir"])
         else:
             raise ValueError(
                 "Unsupported format conversion: "

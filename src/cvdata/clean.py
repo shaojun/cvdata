@@ -13,7 +13,6 @@ from cvdata.common import FORMAT_CHOICES, FORMAT_EXTENSIONS
 from cvdata.convert import png_to_jpg
 from cvdata.utils import matching_ids
 
-
 # ------------------------------------------------------------------------------
 # set up a basic, global _logger which will write to the console
 logging.basicConfig(
@@ -37,7 +36,7 @@ def purge_non_matching(
     :param annotations_dir:
     :param annotation_format:
     :param problems_dir:
-    :return:
+    :return: the matched file ids.
     """
 
     # determine the file extensions
@@ -62,6 +61,7 @@ def purge_non_matching(
                     (file_name.endswith(annotation_ext) or file_name.endswith(image_ext)):
                 if os.path.splitext(file_name)[0] not in matching_file_ids:
                     unmatched_file = os.path.join(directory, file_name)
+                    print("found no match file: {} in {}".format(file_name, str(matching_file_ids)))
                     if problems_dir is not None:
                         shutil.move(unmatched_file, os.path.join(problems_dir, file_name))
                     else:
@@ -320,7 +320,7 @@ def clean_kitti(
 
 # ------------------------------------------------------------------------------
 def clean_pascal(
-        pascal_dir: str,
+        pascal_anno_dir: str,
         images_dir: str,
         label_replacements: Dict = None,
         label_removals: List[str] = None,
@@ -330,7 +330,7 @@ def clean_pascal(
     """
     TODO
 
-    :param pascal_dir:
+    :param pascal_anno_dir:
     :param images_dir:
     :param label_replacements:
     :param label_removals:
@@ -338,18 +338,18 @@ def clean_pascal(
     :return:
     """
 
-    _logger.info("Cleaning dataset with PASCAL annotations")
+    _logger.info("Cleaning dataset with PASCAL annotations...")
 
     # convert all PNG images to JPG, and remove the original PNG file
-    for file_id in matching_ids(pascal_dir, images_dir, ".xml", ".png"):
+    for file_id in matching_ids(pascal_anno_dir, images_dir, ".xml", ".png"):
         png_file_path = os.path.join(images_dir, file_id + ".png")
         png_to_jpg(png_file_path, remove_png=True)
 
     # get the set of file IDs of the Darknet-format annotations and corresponding images
-    file_ids = purge_non_matching(images_dir, pascal_dir, "pascal", problems_dir)
+    matched_file_ids = purge_non_matching(images_dir, pascal_anno_dir, "pascal", problems_dir)
 
     # loop over all the matching files and clean the PASCAL annotations
-    for i, file_id in tqdm(enumerate(file_ids)):
+    for i, file_id in tqdm(enumerate(matched_file_ids)):
 
         # get the image width and height
         jpg_file_name = file_id + ".jpg"
@@ -358,7 +358,7 @@ def clean_pascal(
         img_width, img_height = image.size
 
         # update the image file name in the PASCAL file
-        src_annotation_file_path = os.path.join(pascal_dir, file_id + ".xml")
+        src_annotation_file_path = os.path.join(pascal_anno_dir, file_id + ".xml")
         if os.path.exists(src_annotation_file_path):
             tree = etree.parse(src_annotation_file_path)
             root = tree.getroot()
@@ -382,6 +382,17 @@ def clean_pascal(
             file_name = root.find("filename")
             if (file_name is not None) and (file_name.text != jpg_file_name):
                 file_name.text = jpg_file_name
+
+            if root.find("object") is None:
+                # 'object' does not exists, that we can't reasonably fix, remove files
+                if problems_dir is not None:
+                    for file_path in [src_annotation_file_path, image_file_path]:
+                        dest_file_path = os.path.join(problems_dir, os.path.split(file_path)[1])
+                        shutil.move(file_path, dest_file_path)
+                else:
+                    os.remove(src_annotation_file_path)
+                    os.remove(image_file_path)
+                continue
 
             # loop over all bounding boxes
             for obj in root.iter("object"):
@@ -449,7 +460,6 @@ def clean_pascal(
 
 # ------------------------------------------------------------------------------
 def main():
-
     # Usage:
     # $ python clean.py --format pascal \
     #       --annotations_dir /data/datasets/delivery_truck/pascal \
@@ -460,26 +470,30 @@ def main():
     args_parser = argparse.ArgumentParser()
     args_parser.add_argument(
         "--annotations_dir",
-        required=True,
+        required=False,
         type=str,
+        default="pascal_dataset/Annotations",
         help="path to directory containing annotation files to be cleaned",
     )
     args_parser.add_argument(
         "--images_dir",
-        required=True,
+        required=False,
         type=str,
+        default="pascal_dataset/JPEGImages",
         help="path to directory containing image files",
     )
     args_parser.add_argument(
         "--problems_dir",
         required=False,
         type=str,
+        default="pascal_dataset/problems_dir",
         help="path to directory where we should move problem files",
     )
     args_parser.add_argument(
         "--format",
-        required=True,
+        required=False,
         type=str,
+        default="pascal",
         choices=FORMAT_CHOICES,
         help="format of input annotations",
     )
@@ -531,11 +545,10 @@ def main():
             replacements,
             args["remove_labels"],
             args["keep_labels"],
-            args["problems_dir"],            
+            args["problems_dir"],
         )
 
 
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
-
     main()

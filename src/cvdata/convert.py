@@ -7,7 +7,7 @@ from pathlib import Path
 import shutil
 from typing import Dict, List, NamedTuple, Set
 from xml.etree import ElementTree
-
+import numpy as np
 import contextlib2
 import cv2
 import pandas as pd
@@ -732,6 +732,7 @@ def images_jpeg_to_jpg(
             os.rename(os.path.join(images_dir, file_name), os.path.join(images_dir, file_name_prefix + ".jpg"))
     _logger.info(f"    Total: {renamed_files_count} files were renamed.")
 
+
 # ------------------------------------------------------------------------------
 def images_PNG_to_png(
         images_dir: str,
@@ -745,6 +746,7 @@ def images_PNG_to_png(
             renamed_files_count = renamed_files_count + 1
             os.rename(os.path.join(images_dir, file_name), os.path.join(images_dir, file_name_prefix + ".png"))
     _logger.info(f"    Total: {renamed_files_count} files were renamed.")
+
 
 # ------------------------------------------------------------------------------
 def images_png_to_jpg(
@@ -760,6 +762,7 @@ def images_png_to_jpg(
             renamed_files_count = renamed_files_count + 1
     _logger.info(f"    Total: {renamed_files_count} files were converted.")
 
+
 # ------------------------------------------------------------------------------
 def images_jpg_to_png(
         images_dir: str,
@@ -773,6 +776,7 @@ def images_jpg_to_png(
             jpg_to_png(jpg_file_path, True)
             renamed_files_count = renamed_files_count + 1
     _logger.info(f"    Total: {renamed_files_count} files were converted.")
+
 
 # ------------------------------------------------------------------------------
 def png_to_jpg(
@@ -789,16 +793,26 @@ def png_to_jpg(
 
     # argument validation
     if not os.path.exists(png_file_path):
-        raise ValueError(f"File does not exist: {png_file_path}")
+        n, e = os.path.splitext(png_file_path)
+        png_file_path = n + ".PNG"
+        if not os.path.exists(png_file_path):
+            raise ValueError(f"File does not exist(tried both .png and .PNG): {png_file_path}")
 
     # read the PNG image data and rewrite as JPG
     jpg_file_path = os.path.splitext(png_file_path)[0] + ".jpg"
-    img = cv2.imread(png_file_path)
+    try:
+        # img = cv2.imread(png_file_path)
+        img = cv2.imdecode(np.fromfile(png_file_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+        if img is None:
+            raise ResourceWarning("png could not be loaded as img: {}".format(png_file_path))
+    except:
+        raise ResourceWarning("load png to img exceptioned at png path: {}".format(png_file_path))
     cv2.imwrite(jpg_file_path, img)
     if remove_png:
         os.remove(png_file_path)
 
     return jpg_file_path
+
 
 # ------------------------------------------------------------------------------
 def jpg_to_png(

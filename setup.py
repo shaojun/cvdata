@@ -50,6 +50,7 @@ setup(
             "cvdata_rename=cvdata.rename:main",
             "cvdata_resize=cvdata.resize:main",
             "cvdata_split=cvdata.split:main",
+            "cvdata_split_with_structure=cvdata.split_with_structure:main",
             "cvdata_visualize=cvdata.visualize:main",
         ]
     },

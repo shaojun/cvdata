@@ -90,7 +90,7 @@ def matching_ids(
         ids = []
         for file_name in os.listdir(directory):
             file_id, ext = os.path.splitext(file_name)
-            if ext == extension:
+            if ext.lower() == extension.lower():
                 ids.append(file_id)
         return ids
 

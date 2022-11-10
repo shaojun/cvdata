@@ -45,14 +45,16 @@ def rename_image_files(
         if ext[1:].lower() in supported_extensions:
             if not keep_old_name:
                 new_image_file_name = f"{prefix}_{str(current).zfill(digits)}{ext}"
+                new_image_file_name_without_ext = f"{prefix}_{str(current).zfill(digits)}"
             else:
                 new_image_file_name = f"{prefix}_{str(current).zfill(digits)}_{orignal_image_file_short_name}{ext}"
+                new_image_file_name_without_ext = f"{prefix}_{str(current).zfill(digits)}_{orignal_image_file_short_name}"
             new_image_file_path = os.path.join(images_dir, new_image_file_name)
             original_image_file_path = os.path.join(images_dir, image_file_name)
             os.rename(original_image_file_path, new_image_file_path)
             original_label_file_name = os.path.join(kitti_labels_dir, f"{orignal_image_file_short_name}.txt")
             if os.path.exists(original_label_file_name):
-                os.rename(original_label_file_name, os.path.join(kitti_labels_dir, f"{new_image_file_name}.txt"))
+                os.rename(original_label_file_name, os.path.join(kitti_labels_dir, f"{new_image_file_name_without_ext}.txt"))
             else:
                 _logger.info(f"Label file: {original_label_file_name} could not be found, skip it for renaming...")
             current += 1
